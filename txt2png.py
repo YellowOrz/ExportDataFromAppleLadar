@@ -5,7 +5,7 @@ dir_path = "./Documents/"
 R=np.array([255,0,0], dtype=np.uint8)
 G=np.array([0,255,0], dtype=np.uint8)
 B=np.array([0,0,255], dtype=np.uint8)
-confidence2RGB={0:R,1:G,2:B}
+confidence2RGB={0:R,1:G,2:B} # 0、1、2分别对应置信度低、中、高
 for filename in os.listdir(dir_path):
     if "txt" in filename:
         i = 0; x = 0; y = 0

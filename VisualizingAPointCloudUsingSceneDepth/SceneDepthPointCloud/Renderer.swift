@@ -11,11 +11,11 @@ import ARKit
 
 final class Renderer {
     // Maximum number of points we store in the point cloud
-    private let maxPoints = 500_000
+    private let maxPoints = 5000_000
     // Number of sample points on the grid
-    private let numGridPoints = 500
+    private let numGridPoints = 7500
     // Particle's size in pixels
-    private let particleSize: Float = 10
+    private let particleSize: Float = 5
     // We only use landscape orientation in this app
     private let orientation = UIInterfaceOrientation.landscapeRight
     // Camera's threshold values for detecting when the camera moves so that we can accumulate the points
@@ -24,6 +24,11 @@ final class Renderer {
     // The max number of command buffers in flight
     private let maxInFlightBuffers = 3
     
+    // 取值 rotateToARCamera = [[1.0, 0.0, 0.0, 0.0],
+    //                         [0.0,-1.0, 0.0, 0.0],
+    //                         [0.0, 0.0,-1.0, 0.0],
+    //                         [0.0, 0.0, 0.0, 1.0]]
+    // 用来将变换矩阵T中的旋转部分的Y和Z取负
     private lazy var rotateToARCamera = Self.makeRotateToARCameraMatrix(orientation: orientation)
     private let session: ARSession
     
@@ -144,6 +149,7 @@ final class Renderer {
     }
     
     private func updateDepthTextures(frame: ARFrame) -> Bool {
+        // depthMap和confidenceMap的数据类型都为CVPixelBuffer
         guard let depthMap = frame.sceneDepth?.depthMap,
             let confidenceMap = frame.sceneDepth?.confidenceMap else {
                 return false
@@ -160,7 +166,6 @@ final class Renderer {
 //        let handle=FileHandle(forWritingAtPath: path)
 //        print(depthMap.attachments.propagated.count)
 //        print(depthMap.self)
-////        print(depthMap[10][10])
 //        print(CVPixelBufferGetWidth(depthMap))
 //        print(CVPixelBufferGetHeight(depthMap))
 //        print(CVPixelBufferGetDataSize(depthMap))
@@ -181,21 +186,20 @@ final class Renderer {
         let dateformatter = DateFormatter()
         dateformatter.dateFormat = "MM-dd-HH-mm-ss-SSS"
         let time=dateformatter.string(from: Date())
-        
+
         //将深度图、置信图以矩阵形式一次性存入二进制文件
         let confidenceMapBin = time+"_confidenceMap_Matrix"
         confidenceMap.UInt8_Binary_Matrix(fileName: confidenceMapBin)
         let depthMapBin = time+"_depthMap_Matrix"
         depthMap.Float32_Binary_Matrix(fileName: depthMapBin)
-        
-        //不好用👎，很慢
+
+        //不好用👎，很慢，存一张图大概要8秒
         //将深度图、置信图的每个值依次存入二进制文件
         //        let depthMapBin = time+"_depthMap_Bin"
         //        depthMap.SaveAsBinaryDirectly(BinName: depthMapBin)
         //        let confidenceMapBin = time+"_confidenceMap_Bin"
         //        confidenceMap.SaveAsBinaryDirectly(BinName: confidenceMapBin)
-        
-        
+
         //保存彩色图片
         let pixelBuffer = frame.capturedImage
         let RBG_PNG = time+"_RGB"+".png"
@@ -213,15 +217,10 @@ final class Renderer {
         // frame dependent info
         let camera = frame.camera
         
-        // ========== 以下是增加内容 ========== //
-        //获取相机内参
-        //print(camera.intrinsics)
-        // ========== 以上是增加内容 ========== //
-        
         let cameraIntrinsicsInversed = camera.intrinsics.inverse
-        let viewMatrix = camera.viewMatrix(for: orientation)
+        let viewMatrix = camera.viewMatrix(for: orientation) // 变换矩阵：世界坐标系->相机坐标系，大小4*4
         let viewMatrixInversed = viewMatrix.inverse
-        let projectionMatrix = camera.projectionMatrix(for: orientation, viewportSize: viewportSize, zNear: 0.001, zFar: 0)
+        let projectionMatrix = camera.projectionMatrix(for: orientation, viewportSize: viewportSize, zNear: 0.001, zFar: 0) // 投影矩阵：三维世界坐标系->视点的二位平面???
         pointCloudUniforms.viewProjectionMatrix = projectionMatrix * viewMatrix
         pointCloudUniforms.localToWorld = viewMatrixInversed * rotateToARCamera
         pointCloudUniforms.cameraIntrinsicsInversed = cameraIntrinsicsInversed
@@ -308,7 +307,7 @@ final class Renderer {
         renderEncoder.setVertexTexture(CVMetalTextureGetTexture(depthTexture!), index: Int(kTextureDepth.rawValue))
         renderEncoder.setVertexTexture(CVMetalTextureGetTexture(confidenceTexture!), index: Int(kTextureConfidence.rawValue))
         renderEncoder.drawPrimitives(type: .point, vertexStart: 0, vertexCount: gridPointsBuffer.count)
-        
+        // 如果 numGridPoints = 500，取值 gridPointsBuffer.count = 494 ( = 26*19 )
         currentPointIndex = (currentPointIndex + gridPointsBuffer.count) % maxPoints
         currentPointCount = min(currentPointCount + gridPointsBuffer.count, maxPoints)
         lastCameraTransform = frame.camera.transform
@@ -368,7 +367,10 @@ private extension Renderer {
     
     /// Makes sample points on camera image, also precompute the anchor point for animation
     func makeGridPoints() -> [Float2] {
+        // 取值 cameraResolution.x = 1920
+        // 取值 cameraResolution.y = 1440
         let gridArea = cameraResolution.x * cameraResolution.y
+        // 如果 numGridPoints = 500，取值 spacing = 74.4（像素）
         let spacing = sqrt(gridArea / Float(numGridPoints))
         let deltaX = Int(round(cameraResolution.x / spacing))
         let deltaY = Int(round(cameraResolution.y / spacing))
@@ -384,6 +386,7 @@ private extension Renderer {
         }
         
         return points
+        
     }
     
     func makeTextureCache() -> CVMetalTextureCache {
@@ -421,15 +424,29 @@ private extension Renderer {
         }
     }
     
+    
+    // 返回 [[1.0, 0.0, 0.0, 0.0],
+    //      [0.0,-1.0, 0.0, 0.0],
+    //      [0.0, 0.0,-1.0, 0.0],
+    //      [0.0, 0.0, 0.0, 1.0]]
     static func makeRotateToARCameraMatrix(orientation: UIInterfaceOrientation) -> matrix_float4x4 {
         // flip to ARKit Camera's coordinate
         let flipYZ = matrix_float4x4(
             [1, 0, 0, 0],
-            [0, -1, 0, 0],
-            [0, 0, -1, 0],
+            [0,-1, 0, 0],
+            [0, 0,-1, 0],
             [0, 0, 0, 1] )
-
+        
         let rotationAngle = Float(cameraToDisplayRotation(orientation: orientation)) * .degreesToRadian
+        // 取值cameraToDisplayRotation(orientation: orientation) = 0
+        // 取值rotationAngle = 0
+        
         return flipYZ * matrix_float4x4(simd_quaternion(rotationAngle, Float3(0, 0, 1)))
+        // 取值simd_quaternion(rotationAngle, Float3(0, 0, 1)) = SIMD4<Float>(0.0, 0.0, 0.0, 1.0)
+        // 取值matrix_float4x4(simd_quaternion(rotationAngle, Float3(0, 0, 1))) =
+        //     [[1.0, 0.0, 0.0, 0.0],
+        //      [0.0, 1.0, 0.0, 0.0],
+        //      [0.0, 0.0, 1.0, 0.0],
+        //      [0.0, 0.0, 0.0, 1.0]]
     }
 }
