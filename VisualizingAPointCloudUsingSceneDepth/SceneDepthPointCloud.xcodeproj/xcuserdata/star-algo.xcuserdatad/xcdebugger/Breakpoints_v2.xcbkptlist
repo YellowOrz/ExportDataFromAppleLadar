@@ -7,16 +7,208 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "35B60A64-E65E-4897-9919-0389D24A2678"
+            uuid = "121F2BA6-CC24-42B2-B476-E1173DDC4A91"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "SceneDepthPointCloud/Renderer.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "80"
+            endingLineNumber = "80"
+            landmarkName = "pointCloudUniforms"
+            landmarkType = "24">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "510ACCCD-1A74-4A91-B734-4891895509E2"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "SceneDepthPointCloud/Renderer.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "198"
+            endingLineNumber = "198"
+            landmarkName = "updateDepthTextures(frame:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "2388DED7-0058-42A2-B4BC-C9BE1179DD7C"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "SceneDepthPointCloud/Renderer.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "218"
+            endingLineNumber = "218"
+            landmarkName = "update(frame:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "FDD8949F-AB20-446A-91DE-DDFFAFCF7122"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "SceneDepthPointCloud/Renderer.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "92"
+            endingLineNumber = "92"
+            landmarkName = "Renderer"
+            landmarkType = "3">
+            <Locations>
+               <Location
+                  uuid = "FDD8949F-AB20-446A-91DE-DDFFAFCF7122 - fe7371fe9256f87d"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "Test_Point_Cloud.Renderer.(lastCameraTransform in _030FBDB968432DFAB690C94EE259954C).getter : __C.simd_float4x4"
+                  moduleName = "Test_Point_Cloud"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/star-algo/Desktop/ExportDataFromAppleLadar/VisualizingAPointCloudUsingSceneDepth/SceneDepthPointCloud/Renderer.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "92"
+                  endingLineNumber = "92"
+                  offsetFromSymbolStart = "844">
+               </Location>
+               <Location
+                  uuid = "FDD8949F-AB20-446A-91DE-DDFFAFCF7122 - 62ae41da6e7fd461"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "Test_Point_Cloud.Renderer.(lastCameraTransform in _030FBDB968432DFAB690C94EE259954C).setter : __C.simd_float4x4"
+                  moduleName = "Test_Point_Cloud"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/star-algo/Desktop/ExportDataFromAppleLadar/VisualizingAPointCloudUsingSceneDepth/SceneDepthPointCloud/Renderer.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "92"
+                  endingLineNumber = "92"
+                  offsetFromSymbolStart = "808">
+               </Location>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "76DFBDBC-AB93-4878-A36D-553952E8C447"
             shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "SceneDepthPointCloud/Renderer.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "220"
-            endingLineNumber = "220"
-            landmarkName = "update(frame:)"
+            startingLineNumber = "96"
+            endingLineNumber = "96"
+            landmarkName = "confidenceThreshold"
+            landmarkType = "24">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "5FA713AA-5739-4FDF-8BA2-7D8C5B72BB28"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "SceneDepthPointCloud/Renderer.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "93"
+            endingLineNumber = "93"
+            landmarkName = "Renderer"
+            landmarkType = "3">
+            <Locations>
+               <Location
+                  uuid = "5FA713AA-5739-4FDF-8BA2-7D8C5B72BB28 - fe7371fe9256f812"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "Test_Point_Cloud.Renderer.(lastCameraTransform in _030FBDB968432DFAB690C94EE259954C).getter : __C.simd_float4x4"
+                  moduleName = "Test_Point_Cloud"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/star-algo/Desktop/ExportDataFromAppleLadar/VisualizingAPointCloudUsingSceneDepth/SceneDepthPointCloud/Renderer.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "89"
+                  endingLineNumber = "89"
+                  offsetFromSymbolStart = "28">
+               </Location>
+               <Location
+                  uuid = "5FA713AA-5739-4FDF-8BA2-7D8C5B72BB28 - fe7371fe9256f99e"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "Test_Point_Cloud.Renderer.(lastCameraTransform in _030FBDB968432DFAB690C94EE259954C).getter : __C.simd_float4x4"
+                  moduleName = "Test_Point_Cloud"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/star-algo/Desktop/ExportDataFromAppleLadar/VisualizingAPointCloudUsingSceneDepth/SceneDepthPointCloud/Renderer.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "93"
+                  endingLineNumber = "93"
+                  offsetFromSymbolStart = "64">
+               </Location>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "B5027F32-9A8F-42A7-B5D0-9990F958E0C1"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "SceneDepthPointCloud/Renderer.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "94"
+            endingLineNumber = "94"
+            landmarkName = "Renderer"
+            landmarkType = "3">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "D81C31D1-6276-47C2-AC44-A790E446FB9F"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "SceneDepthPointCloud/Renderer.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "320"
+            endingLineNumber = "320"
+            landmarkName = "makeUnprojectionPipelineState()"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "D5EF7DF2-21FE-4DA9-85DF-81170BFD4C5C"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "SceneDepthPointCloud/Renderer.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "319"
+            endingLineNumber = "319"
+            landmarkName = "makeUnprojectionPipelineState()"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>

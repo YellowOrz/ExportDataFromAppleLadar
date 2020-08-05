@@ -11,11 +11,11 @@ import ARKit
 
 final class Renderer {
     // Maximum number of points we store in the point cloud
-    private let maxPoints = 5000_000
+    private let maxPoints = 500_000
     // Number of sample points on the grid
-    private let numGridPoints = 7500
+    private let numGridPoints = 500
     // Particle's size in pixels
-    private let particleSize: Float = 5
+    private let particleSize: Float = 10
     // We only use landscape orientation in this app
     private let orientation = UIInterfaceOrientation.landscapeRight
     // Camera's threshold values for detecting when the camera moves so that we can accumulate the points
@@ -76,6 +76,7 @@ final class Renderer {
         uniforms.confidenceThreshold = Int32(confidenceThreshold)
         uniforms.particleSize = particleSize
         uniforms.cameraResolution = cameraResolution
+        // 取值 cameraResolution = SIMD2<Float>(1920.0, 1440.0)
         return uniforms
     }()
     private var pointCloudUniformsBuffers = [MetalBuffer<PointCloudUniforms>]()
@@ -86,12 +87,13 @@ final class Renderer {
     
     // Camera data
     private var sampleFrame: ARFrame { session.currentFrame! }
+    // 输出 cameraResolution = SIMD2<Float>(1920.0, 1440.0)
     private lazy var cameraResolution = Float2(Float(sampleFrame.camera.imageResolution.width), Float(sampleFrame.camera.imageResolution.height))
     private lazy var viewToCamera = sampleFrame.displayTransform(for: orientation, viewportSize: viewportSize).inverted()
     private lazy var lastCameraTransform = sampleFrame.camera.transform
     
     // interfaces
-    var confidenceThreshold = 1 {
+    var confidenceThreshold = 2 {   // 对应app中默认的置信度
         didSet {
             // apply the change for the shader
             pointCloudUniforms.confidenceThreshold = Int32(confidenceThreshold)
@@ -157,42 +159,29 @@ final class Renderer {
         
         // ========== 以下是增加内容 ========== //
         print("###########")
-
-//        let fileManager=FileManager.default
-//        depthMap.attachments.
-//        let depthMapString="test.txt"
-//        let file=NSSearchPathForDirectoriesInDomains(FileManager.SearchPathDirectory.documentDirectory,FileManager.SearchPathDomainMask.userDomainMask, true)
-//        fileManager.createFile(atPath: path, contents: nil, attributes: nil)
-//        let handle=FileHandle(forWritingAtPath: path)
-//        print(depthMap.attachments.propagated.count)
-//        print(depthMap.self)
-//        print(CVPixelBufferGetWidth(depthMap))
-//        print(CVPixelBufferGetHeight(depthMap))
-//        print(CVPixelBufferGetDataSize(depthMap))
-//        CVPixelBufferGetPixelFormatType(depthMap)
-//        depthMap?.normalize()
-//        let ciDepthMap=CIImage(cvPixelBuffer: depthMap)
-//        let uiDepthMap=UIImage(ciImage: ciDepthMap)
-//        let result=saveImage(image: uiDepthMap)
-//        print(result)
-//        UIImageView.
-//        UIImageWriteToSavedPhotosAlbum(uiDepthMap, self, #selector(image(_:didFinishSavingWithError:contextInfo:)), nil)
-//        saveImageToAlbum(image: uiDepthMap)
-//        UIImageWriteToSavedPhotosAlbum(uiDepthMap,nil,nil,nil)
-//        confidenceMap.printPixelValue()
         
         //获取当前时间，作为文件名称的一部分，以区分不同的场景的文件
         //https://www.jianshu.com/p/652670916ecc
-        let dateformatter = DateFormatter()
+        var dateformatter = DateFormatter()
         dateformatter.dateFormat = "MM-dd-HH-mm-ss-SSS"
-        let time=dateformatter.string(from: Date())
-
-        //将深度图、置信图以矩阵形式一次性存入二进制文件
+        var time=dateformatter.string(from: Date())
+        print("===== start \(time) =====")
+        
+        //将深度图、置信图以矩阵形式一次性存入二进制文件，各要花费70ms
         let confidenceMapBin = time+"_confidenceMap_Matrix"
         confidenceMap.UInt8_Binary_Matrix(fileName: confidenceMapBin)
+        dateformatter = DateFormatter()
+        dateformatter.dateFormat = "MM-dd-HH-mm-ss-SSS"
+        time=dateformatter.string(from: Date())
+        print("===== confi \(time) =====")
+        
         let depthMapBin = time+"_depthMap_Matrix"
         depthMap.Float32_Binary_Matrix(fileName: depthMapBin)
-
+        dateformatter = DateFormatter()
+        dateformatter.dateFormat = "MM-dd-HH-mm-ss-SSS"
+        time=dateformatter.string(from: Date())
+        print("===== depth \(time) =====")
+        
         //不好用👎，很慢，存一张图大概要8秒
         //将深度图、置信图的每个值依次存入二进制文件
         //        let depthMapBin = time+"_depthMap_Bin"
@@ -200,10 +189,18 @@ final class Renderer {
         //        let confidenceMapBin = time+"_confidenceMap_Bin"
         //        confidenceMap.SaveAsBinaryDirectly(BinName: confidenceMapBin)
 
-        //保存彩色图片
-        let pixelBuffer = frame.capturedImage
-        let RBG_PNG = time+"_RGB"+".png"
-        pixelBuffer.SaveAsPNG(PNGName:RBG_PNG)
+        //保存彩色图片，要花费700ms
+        // 输出 pixelBuffer = <CVPixelBuffer 0x282f14a00 width=1920 height=1440 pixelFormat=420f iosurface=0x281c18500 planes=2>
+        //                   <Plane 0 width=1920 height=1440 bytesPerRow=1920>
+        //                   <Plane 1 width=960 height=720 bytesPerRow=1920>
+//        let pixelBuffer = frame.capturedImage
+//        let RBG_PNG = time+"_RGB"+".png"
+//        pixelBuffer.SaveAsPNG(PNGName:RBG_PNG)
+//
+//        dateformatter = DateFormatter()
+//        dateformatter.dateFormat = "MM-dd-HH-mm-ss-SSS"
+//        time=dateformatter.string(from: Date())
+//        print("===== RGB   \(time) =====")
         
         // ========== 以上是增加内容 ========== //
         

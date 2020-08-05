@@ -81,6 +81,8 @@ extension CVPixelBuffer {
             (Matrix as NSArray).write(toFile: arrayPath, atomically: false)
             print("Save \(fileName) success!")
         }
+        // 需要吗？
+        // CVPixelBufferUnlockBaseAddress(self, CVPixelBufferLockFlags(rawValue: 0))
       
     }
     
@@ -93,54 +95,7 @@ extension CVPixelBuffer {
         CVPixelBufferLockBaseAddress(self, CVPixelBufferLockFlags(rawValue: 0))
         var floatBuffer = unsafeBitCast(CVPixelBufferGetBaseAddress(self), to: UnsafeMutablePointer<Float>.self)
         
-        //方式一：转成string（不行）
-//        // https://blog.csdn.net/Sico2Sico/article/details/79213122
-//        let fileManager = FileManager.default
-//        let file = NSSearchPathForDirectoriesInDomains(FileManager.SearchPathDirectory.documentDirectory, FileManager.SearchPathDomainMask.userDomainMask, true).first
-//        let path = file! + BinName
-//        fileManager.createFile(atPath: path, contents:nil, attributes:nil)
-//        let handle = FileHandle(forWritingAtPath:path)
-//        for y in 0 ..< height {
-//            for x in 0 ..< width {
-//                var pixel:Float = floatBuffer[y * width + x]
-//                handle?.write(String(pixel*1000).data(using: String.Encoding.utf8)!)
-//            }
-//        }
-//        print("Save \(BinName) success!")
-//        return true
-        
-        //方式二：（不能正常保存文件，显示“Unable to write in new file.”）只打开关闭一次文件
-//        // get path of directory
-//        guard let directory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).last else {
-//            return false
-//        }
-//        // create file url
-//        let fileurl =  directory.appendingPathComponent("\(BinName).txt")
-//        // if file exists then write data
-//        if FileManager.default.fileExists(atPath: fileurl.path) {
-//            if let fileHandle = FileHandle(forWritingAtPath: fileurl.path) {
-//                // seekToEndOfFile, writes data at the last of file(appends not override)
-//                for y in 0 ..< height {
-//                    for x in 0 ..< width {
-//                        var pixel:Float = floatBuffer[y * width + x]
-//                        let data=Data(buffer: UnsafeBufferPointer(start: &pixel, count: 1))
-//                        fileHandle.seekToEndOfFile()
-//                        fileHandle.write(data)
-//                    }
-//                }
-//                fileHandle.closeFile()
-//                print("Save \(BinName) success!")
-//                return true
-//            }else {
-//                print("Can't open file to write.")
-//                return false
-//            }
-//        }else {
-//            print("Unable to write in new file.")
-//            return false
-//        }
-        
-        //方式三：（肯定可用，但是一张要8秒）每获取一次数据，打开写入关闭文件一次
+        //（肯定可用，但是一张要8秒）每获取一次数据，打开写入关闭文件一次
         for y in 0 ..< height {
             for x in 0 ..< width {
                 var pixel:Float = floatBuffer[y * width + x]
