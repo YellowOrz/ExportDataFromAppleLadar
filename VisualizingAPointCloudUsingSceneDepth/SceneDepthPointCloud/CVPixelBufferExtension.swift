@@ -4,9 +4,11 @@ import AVFoundation
 import UIKit
 
 extension CVPixelBuffer {
-    // 主要用于保存彩色图
-    // 将CVPixelBuffer保存为PNG图片
-    // https://stackoverflow.com/questions/37344822/saving-image-and-then-loading-it-in-swift-ios
+    /**
+     主要用于保存彩色图
+     将CVPixelBuffer保存为PNG图片
+     https://stackoverflow.com/questions/37344822/saving-image-and-then-loading-it-in-swift-ios
+    */
     func SaveAsPNG(PNGName:String) -> Bool{
         let ciImage=CIImage(cvPixelBuffer: self)
         let uiImage=UIImage(ciImage: ciImage)
@@ -24,8 +26,10 @@ extension CVPixelBuffer {
         }
     }
     
-    // 主要用于保存置信图
-    // 将数值的格式为UInt8的CVPixelBuffer，通过矩阵形式一次性存储到二进制文件中
+    /**
+     主要用于保存置信图
+     将数值的格式为UInt8的CVPixelBuffer，通过矩阵形式一次性存储到二进制文件中
+     */
     func UInt8_Binary_Matrix(fileName:String) {
         let width = CVPixelBufferGetWidth(self)
         let height = CVPixelBufferGetHeight(self)
@@ -54,14 +58,16 @@ extension CVPixelBuffer {
       
     }
     
-    // 主要用于保存深度图
-    // 将数值的格式为Float32的CVPixelBuffer，通过矩阵形式一次性存储到二进制文件中
+    /**
+    主要用于保存深度图
+    将数值的格式为Float32的CVPixelBuffer，通过矩阵形式一次性存储到二进制文件中
+     */
     func Float32_Binary_Matrix(fileName:String) {
         let width = CVPixelBufferGetWidth(self)
         let height = CVPixelBufferGetHeight(self)
 
         CVPixelBufferLockBaseAddress(self, CVPixelBufferLockFlags(rawValue: 0))
-        var floatBuffer = unsafeBitCast(CVPixelBufferGetBaseAddress(self), to: UnsafeMutablePointer<Float32>.self)
+        let floatBuffer = unsafeBitCast(CVPixelBufferGetBaseAddress(self), to: UnsafeMutablePointer<Float32>.self)
 
         var i:Int = 0
         // 创建二维矩阵，存储每个像素点的值
@@ -85,9 +91,10 @@ extension CVPixelBuffer {
         // CVPixelBufferUnlockBaseAddress(self, CVPixelBufferLockFlags(rawValue: 0))
       
     }
-    
-    // 不好用👎
-    // 将CVPixelBuffer中的每一个值以此存入二进制文件（可能是二进制文件吧，毕竟资料都是网上查的）
+    /**
+     不好用👎
+     将CVPixelBuffer中的每一个值以此存入二进制文件（可能是二进制文件吧，毕竟资料都是网上查的）
+     */
     func SaveAsBinaryDirectly(BinName:String) -> Bool {
         let width = CVPixelBufferGetWidth(self)
         let height = CVPixelBufferGetHeight(self)
