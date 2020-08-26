@@ -1,0 +1,10 @@
+# Finder
+.DS_Store
+
+# Xcode - User files
+xcuserdata/
+*.xcworkspace
+
+# CLion
+*build*
+.idea

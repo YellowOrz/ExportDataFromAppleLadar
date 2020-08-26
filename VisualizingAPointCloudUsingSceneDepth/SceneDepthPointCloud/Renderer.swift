@@ -19,6 +19,7 @@ final class Renderer {
     var saveDepthPNGEnable:Bool = true
     var saveDepthTXTEnable:Bool = true
     
+    
     private var time: String = "MM-dd-HH-mm-ss-SSS"
     private var fileDir:String = NSHomeDirectory() + "/Documents/"
     // Maximum number of points we store in the point cloud
@@ -145,6 +146,17 @@ final class Renderer {
         depthStencilState = device.makeDepthStencilState(descriptor: depthStateDescriptor)!
         
         inFlightSemaphore = DispatchSemaphore(value: maxInFlightBuffers)
+        
+        // 每次开启app的数据都保存在同一文件夹下
+        updateTime()
+        fileDir = fileDir + time + "/"
+        // 创建文件夹 https://blog.csdn.net/a136447572/article/details/78983374
+        let  fileManager = FileManager.default
+        do{  // 创建文件夹   1，路径 2 是否补全中间的路劲 3 属性
+            try fileManager.createDirectory(atPath: self.fileDir, withIntermediateDirectories: true, attributes: nil)
+        } catch{
+            print("Error: creat diraction false!!!")
+        }
     }
     
     func drawRectResized(size: CGSize) {
@@ -223,7 +235,7 @@ final class Renderer {
             do{
                 try cameraMatrix.write(to: URL(fileURLWithPath:path), atomically: false, encoding: .utf8)
             }catch{
-                print("Error: save txt false!!! It's \(path)s")
+                print("Error: save txt false!!! It's \(path)")
             }
         }
         
@@ -233,11 +245,11 @@ final class Renderer {
     }
     
     func draw(camera:Bool, RGB:Bool, Conf:Bool, DepthPNG:Bool, DepthTXT:Bool) {
-        saveCamerEnable = camera
-        saveRGBEnable = RGB
-        saveConfEnable = Conf
-        saveDepthPNGEnable = DepthPNG
-        saveDepthTXTEnable = DepthTXT
+//        saveCamerEnable = camera
+//        saveRGBEnable = RGB
+//        saveConfEnable = Conf
+//        saveDepthPNGEnable = DepthPNG
+//        saveDepthTXTEnable = DepthTXT
         
         guard let currentFrame = session.currentFrame,
             let renderDescriptor = renderDestination.currentRenderPassDescriptor,
