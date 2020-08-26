@@ -11,12 +11,44 @@ import MetalKit
 import ARKit
 
 final class ViewController: UIViewController, ARSessionDelegate {
+    // 开关
+    @IBOutlet weak var saveCamera: UISwitch!
+    @IBOutlet weak var saveRGB: UISwitch!
+    @IBOutlet weak var saveConf: UISwitch!
+    @IBOutlet weak var saveDepthPNG: UISwitch!
+    @IBOutlet weak var saveDepthTXT: UISwitch!
+    
+    // 数据保存选项
+    var saveCamerEnable:Bool = true
+    var saveRGBEnable:Bool = true
+    var saveConfEnable:Bool = true
+    var saveDepthPNGEnable:Bool = true
+    var saveDepthTXTEnable:Bool = true
+    
     private let isUIEnabled = true
     private let confidenceControl = UISegmentedControl(items: ["Low", "Medium", "High"])
     private let rgbRadiusSlider = UISlider()
     
     private let session = ARSession()
     private var renderer: Renderer!
+    
+    // 开关操作触发
+    @IBAction func changeCameraEnable(_ sender: UISwitch) {
+        saveCamerEnable = sender.isOn
+    }
+    @IBAction func changeRGBEnable(_ sender: UISwitch) {
+        saveRGBEnable =  sender.isOn
+    }
+    @IBAction func changeConfEnable(_ sender: UISwitch) {
+        saveConfEnable = sender.isOn
+    }
+    @IBAction func changeDepthPNGEnable(_ sender: UISwitch) {
+        saveDepthPNGEnable = sender.isOn
+    }
+    @IBAction func changeDepthTXTEnable(_ sender: UISwitch) {
+        saveDepthPNGEnable = sender.isOn
+    }
+    
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -37,6 +69,7 @@ final class ViewController: UIViewController, ARSessionDelegate {
             view.depthStencilPixelFormat = .depth32Float
             view.contentScaleFactor = 1
             view.delegate = self
+            
             
             // Configure the renderer to draw to the view
             renderer = Renderer(session: session, metalDevice: device, renderDestination: view)
@@ -142,7 +175,7 @@ extension ViewController: MTKViewDelegate {
     
     // Called whenever the view needs to render
     func draw(in view: MTKView) {
-        renderer.draw()
+        renderer.draw(camera: saveCamerEnable, RGB: saveRGBEnable, Conf: saveConfEnable, DepthPNG: saveDepthPNGEnable, DepthTXT: saveDepthTXTEnable)
     }
 }
 

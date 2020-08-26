@@ -12,10 +12,12 @@ extension CVPixelBuffer {
     func SaveAsPNG(PNGName:String) -> Bool{
         let ciImage=CIImage(cvPixelBuffer: self)
         let uiImage=UIImage(ciImage: ciImage)
+        
         guard let data = uiImage.pngData() else { return false }
         guard let directory = try? FileManager.default.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: false) as NSURL else {
             return false
         }
+        
         do {
             try data.write(to: directory.appendingPathComponent(PNGName)!)
             print("Save \(PNGName) success!")
@@ -35,17 +37,15 @@ extension CVPixelBuffer {
         let height = CVPixelBufferGetHeight(self)
 
         CVPixelBufferLockBaseAddress(self, CVPixelBufferLockFlags(rawValue: 0))
-        var floatBuffer = unsafeBitCast(CVPixelBufferGetBaseAddress(self), to: UnsafeMutablePointer<UInt8>.self)
+        let floatBuffer = unsafeBitCast(CVPixelBufferGetBaseAddress(self), to: UnsafeMutablePointer<UInt8>.self)
 
-        var i:Int = 0
         // 创建二维矩阵，存储每个像素点的值
         var Matrix = [[UInt8]]()//https://www.jianshu.com/p/23d4bc7c4f48
         for y in 0 ..< height {
             var row = [UInt8]()
             for x in 0 ..< width {
-                var value:UInt8 = floatBuffer[Int(y * width + x)]
+                let value:UInt8 = floatBuffer[Int(y * width + x)]
                 row.append(value)
-                i=i+1
             }
             Matrix.append(row)
         }
@@ -69,15 +69,13 @@ extension CVPixelBuffer {
         CVPixelBufferLockBaseAddress(self, CVPixelBufferLockFlags(rawValue: 0))
         let floatBuffer = unsafeBitCast(CVPixelBufferGetBaseAddress(self), to: UnsafeMutablePointer<Float32>.self)
 
-        var i:Int = 0
         // 创建二维矩阵，存储每个像素点的值
         var Matrix = [[Float32]]()//https://www.jianshu.com/p/23d4bc7c4f48
         for y in 0 ..< height {
             var row = [Float32]()
             for x in 0 ..< width {
-                var value:Float32 = floatBuffer[Int(y * width + x)]
+                let value:Float32 = floatBuffer[Int(y * width + x)]
                 row.append(value*1000)//将深度图的单位从m变成mm
-                i=i+1
             }
             Matrix.append(row)
         }
@@ -100,7 +98,7 @@ extension CVPixelBuffer {
         let height = CVPixelBufferGetHeight(self)
 
         CVPixelBufferLockBaseAddress(self, CVPixelBufferLockFlags(rawValue: 0))
-        var floatBuffer = unsafeBitCast(CVPixelBufferGetBaseAddress(self), to: UnsafeMutablePointer<Float>.self)
+        let floatBuffer = unsafeBitCast(CVPixelBufferGetBaseAddress(self), to: UnsafeMutablePointer<Float>.self)
         
         //（肯定可用，但是一张要8秒）每获取一次数据，打开写入关闭文件一次
         for y in 0 ..< height {

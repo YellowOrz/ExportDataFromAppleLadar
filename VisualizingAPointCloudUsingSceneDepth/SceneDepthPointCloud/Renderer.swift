@@ -8,20 +8,32 @@ The host app renderer.
 import Metal
 import MetalKit
 import ARKit
+import MobileCoreServices
 
-final class Renderer {
+
+final class Renderer {    
+    // 数据保存选项
+    var saveCamerEnable:Bool = true
+    var saveRGBEnable:Bool = true
+    var saveConfEnable:Bool = true
+    var saveDepthPNGEnable:Bool = true
+    var saveDepthTXTEnable:Bool = true
+    
+    private var time: String = "MM-dd-HH-mm-ss-SSS"
+    private var fileDir:String = NSHomeDirectory() + "/Documents/"
     // Maximum number of points we store in the point cloud
-    private let maxPoints = 500_000
+    private let maxPoints = 1000_000
     // Number of sample points on the grid
     private let numGridPoints = 500
-    // Particle's size in pixels
+    // Particle's size in pixels，屏幕上显示出来的每一个三维点的大小
     private let particleSize: Float = 10
-    // We only use landscape orientation in this app
+    // We only use landscape orientation in this app，app锁定横屏
     private let orientation = UIInterfaceOrientation.landscapeRight
     // Camera's threshold values for detecting when the camera moves so that we can accumulate the points
+    // 只有旋转、平移的幅度超过一定的阈值才融合新的点云
     private let cameraRotationThreshold = cos(2 * .degreesToRadian)
     private let cameraTranslationThreshold: Float = pow(0.02, 2)   // (meter-squared)
-    // The max number of command buffers in flight
+    // The max number of command buffers in flight，（机翻）运行中的命令缓冲区的最大数量
     private let maxInFlightBuffers = 3
     
     // 取值 rotateToARCamera = [[1.0, 0.0, 0.0, 0.0],
@@ -93,7 +105,7 @@ final class Renderer {
     private lazy var lastCameraTransform = sampleFrame.camera.transform
     
     // interfaces
-    var confidenceThreshold = 2 {   // 对应app中默认的置信度
+    var confidenceThreshold = 0 {   // 对应app中默认的置信度
         didSet {
             // apply the change for the shader
             pointCloudUniforms.confidenceThreshold = Int32(confidenceThreshold)
@@ -157,52 +169,30 @@ final class Renderer {
                 return false
         }
         
-        // ========== 以下是增加内容 ========== //
-        print("###########")
+        //保存png格式的彩色图片，要花费30ms
+        let pixelBuffer = frame.capturedImage
+        if saveRGBEnable {
+            let rgbPath = fileDir+time+"_rgb.png"
+            save2png(pixelBuffer: pixelBuffer, path: rgbPath)
+        }
         
-        //获取当前时间，作为文件名称的一部分，以区分不同的场景的文件
-        //https://www.jianshu.com/p/652670916ecc
-        var dateformatter = DateFormatter()
-        dateformatter.dateFormat = "MM-dd-HH-mm-ss-SSS"
-        var time=dateformatter.string(from: Date())
-        print("===== start \(time) =====")
+        //保存txt格式的深度图，要花费35ms
+        if saveDepthTXTEnable {
+            let depPathTxt = fileDir+time+"_depth.txt"
+            save2txt(pixelBuffer: depthMap, path: depPathTxt)
+        }
         
-        //将深度图、置信图以矩阵形式一次性存入二进制文件，各要花费70ms
-        let confidenceMapBin = time+"_confidenceMap_Matrix"
-        confidenceMap.UInt8_Binary_Matrix(fileName: confidenceMapBin)
-        dateformatter = DateFormatter()
-        dateformatter.dateFormat = "MM-dd-HH-mm-ss-SSS"
-        time=dateformatter.string(from: Date())
-        print("===== confi \(time) =====")
+        //保存png格式的深度图，要花费10ms
+        if saveDepthPNGEnable {
+            let depPath = fileDir+time+"_depth.png"
+            save2png(pixelBuffer: depthMap, path: depPath)
+        }
         
-        let depthMapBin = time+"_depthMap_Matrix"
-        depthMap.Float32_Binary_Matrix(fileName: depthMapBin)
-        dateformatter = DateFormatter()
-        dateformatter.dateFormat = "MM-dd-HH-mm-ss-SSS"
-        time=dateformatter.string(from: Date())
-        print("===== depth \(time) =====")
-        
-        //不好用👎，很慢，存一张图大概要8秒
-        //将深度图、置信图的每个值依次存入二进制文件
-        //        let depthMapBin = time+"_depthMap_Bin"
-        //        depthMap.SaveAsBinaryDirectly(BinName: depthMapBin)
-        //        let confidenceMapBin = time+"_confidenceMap_Bin"
-        //        confidenceMap.SaveAsBinaryDirectly(BinName: confidenceMapBin)
-
-        //保存彩色图片，要花费700ms
-        // 输出 pixelBuffer = <CVPixelBuffer 0x282f14a00 width=1920 height=1440 pixelFormat=420f iosurface=0x281c18500 planes=2>
-        //                   <Plane 0 width=1920 height=1440 bytesPerRow=1920>
-        //                   <Plane 1 width=960 height=720 bytesPerRow=1920>
-//        let pixelBuffer = frame.capturedImage
-//        let RBG_PNG = time+"_RGB"+".png"
-//        pixelBuffer.SaveAsPNG(PNGName:RBG_PNG)
-//
-//        dateformatter = DateFormatter()
-//        dateformatter.dateFormat = "MM-dd-HH-mm-ss-SSS"
-//        time=dateformatter.string(from: Date())
-//        print("===== RGB   \(time) =====")
-        
-        // ========== 以上是增加内容 ========== //
+        //保存png格式的置信图，要花费10ms
+        if saveConfEnable {
+            let conPath = fileDir+time+"_conf.png"
+            save2png(pixelBuffer: confidenceMap, path: conPath)
+        }
         
         depthTexture = makeTexture(fromPixelBuffer: depthMap, pixelFormat: .r32Float, planeIndex: 0)
         confidenceTexture = makeTexture(fromPixelBuffer: confidenceMap, pixelFormat: .r8Uint, planeIndex: 0)
@@ -218,12 +208,37 @@ final class Renderer {
         let viewMatrix = camera.viewMatrix(for: orientation) // 变换矩阵：世界坐标系->相机坐标系，大小4*4
         let viewMatrixInversed = viewMatrix.inverse
         let projectionMatrix = camera.projectionMatrix(for: orientation, viewportSize: viewportSize, zNear: 0.001, zFar: 0) // 投影矩阵：三维世界坐标系->视点的二位平面???
+        
+        // 保存到txt文件中
+        if saveCamerEnable {
+            let cameraMatrix:String = """
+                                eulerAngles\n\(camera.eulerAngles)\n
+                                cameraIntrinsics\n\(camera.intrinsics)\n
+                                cameraIntrinsicsInversed\n\(cameraIntrinsicsInversed)\n
+                                viewMatrix\n\(viewMatrix)\n
+                                viewMatrixInversed\n\(viewMatrixInversed)\n
+                                projectionMatrix\n\(projectionMatrix)\n
+                                """
+            let path = fileDir+time+"_camera.txt"
+            do{
+                try cameraMatrix.write(to: URL(fileURLWithPath:path), atomically: false, encoding: .utf8)
+            }catch{
+                print("Error: save txt false!!! It's \(path)s")
+            }
+        }
+        
         pointCloudUniforms.viewProjectionMatrix = projectionMatrix * viewMatrix
         pointCloudUniforms.localToWorld = viewMatrixInversed * rotateToARCamera
         pointCloudUniforms.cameraIntrinsicsInversed = cameraIntrinsicsInversed
     }
     
-    func draw() {
+    func draw(camera:Bool, RGB:Bool, Conf:Bool, DepthPNG:Bool, DepthTXT:Bool) {
+        saveCamerEnable = camera
+        saveRGBEnable = RGB
+        saveConfEnable = Conf
+        saveDepthPNGEnable = DepthPNG
+        saveDepthTXTEnable = DepthTXT
+        
         guard let currentFrame = session.currentFrame,
             let renderDescriptor = renderDestination.currentRenderPassDescriptor,
             let commandBuffer = commandQueue.makeCommandBuffer(),
@@ -238,12 +253,14 @@ final class Renderer {
             }
         }
         
+        updateTime()    //更新当前时间，作为文件名称的一部分，以区分不同的场景的文件
+        
         // update frame data
         update(frame: currentFrame)
         updateCapturedImageTextures(frame: currentFrame)
         
         // handle buffer rotating
-        currentBufferIndex = (currentBufferIndex + 1) % maxInFlightBuffers
+        currentBufferIndex = (currentBufferIndex + 1) % maxInFlightBuffers // 取值为0、1、2（循环）
         pointCloudUniformsBuffers[currentBufferIndex][0] = pointCloudUniforms
         
         if shouldAccumulate(frame: currentFrame), updateDepthTextures(frame: currentFrame) {
@@ -309,7 +326,86 @@ final class Renderer {
         currentPointCount = min(currentPointCount + gridPointsBuffer.count, maxPoints)
         lastCameraTransform = frame.camera.transform
     }
+    
+    /**
+     更新时间
+     */
+    private func updateTime(){
+        //https://www.jianshu.com/p/652670916ecc
+        let dateformatter = DateFormatter()
+        dateformatter.dateFormat = "MM-dd-HH-mm-ss-SSS"
+        time=dateformatter.string(from: Date())
+    }
+    /**
+     将数据保存为txt格式
+     */
+    private func save2txt(pixelBuffer: CVPixelBuffer, path : String) {
+        CVPixelBufferLockBaseAddress(pixelBuffer, CVPixelBufferLockFlags(rawValue: 0))
+        let floatBuffer = unsafeBitCast(CVPixelBufferGetBaseAddress(pixelBuffer), to: UnsafeMutablePointer<Float32>.self)
+        
+        let width = CVPixelBufferGetWidth(pixelBuffer)
+        let height = CVPixelBufferGetHeight(pixelBuffer)
+        var depthValue:String = ""
+        for y in 0 ..< height {
+            for x in 0 ..< width {
+                let value = 1000*floatBuffer[Int(y * width + x)]
+                depthValue += "\(value)\n"
+            }
+        }
+        do{
+            try depthValue.write(to: URL(fileURLWithPath:path), atomically: false, encoding: .utf8)
+        }catch{
+            print("Error: save txt false!!! It's \(path)s")
+        }
+      
+    }
+    
+    /**
+     将数据保存为png格式
+     */
+    private func save2png(pixelBuffer: CVPixelBuffer, path : String){
+        guard let jpegData = jpegData(withPixelBuffer: pixelBuffer, attachments: nil) else {
+            print("Error: Unable to create JPEG photo")
+            return
+        }
+        do {
+            try jpegData.write(to: URL(fileURLWithPath:path))
+        }catch{
+            print("Error: save image false!!! It's \(path)")
+        }
+    }
+    
+    /**
+     将数据格式转化为图像格式
+     */
+    private func jpegData(withPixelBuffer pixelBuffer: CVPixelBuffer, attachments: CFDictionary?) -> Data? {
+        let ciContext = CIContext()
+        let renderedCIImage = CIImage(cvImageBuffer: pixelBuffer)
+        
+        guard let renderedCGImage = ciContext.createCGImage(renderedCIImage, from: renderedCIImage.extent) else {
+            print("Error: Failed to create CGImage")
+            return nil
+        }
+
+        guard let data = CFDataCreateMutable(kCFAllocatorDefault, 0) else {
+            print("Error: Create CFData error!")
+            return nil
+        }
+
+        guard let cgImageDestination = CGImageDestinationCreateWithData(data, kUTTypeJPEG, 1, nil) else {
+            print("Error: Create CGImageDestination error!")
+            return nil
+        }
+
+        CGImageDestinationAddImage(cgImageDestination, renderedCGImage, attachments)
+        if CGImageDestinationFinalize(cgImageDestination) {
+            return data as Data
+        }
+        print("Error: Finalizing CGImageDestination error!")
+        return nil
+    }
 }
+
 
 // MARK: - Metal Helpers
 
