@@ -13,11 +13,11 @@ import MobileCoreServices
 
 final class Renderer {    
     // 数据保存选项
-    var saveCamerEnable:Bool = true
-    var saveRGBEnable:Bool = true
-    var saveConfEnable:Bool = true
-    var saveDepthPNGEnable:Bool = true
-    var saveDepthTXTEnable:Bool = true
+    var saveCamerEnable:Bool = true     //一帧1ms
+    var saveRGBEnable:Bool = true       //一帧30ms
+    var saveConfEnable:Bool = true      //一帧10ms
+    var saveDepthJPEGEnable:Bool = true  //一帧10ms
+    var saveDepthTXTEnable:Bool = true  //一帧35ms
     
     
     private var time: String = "MM-dd-HH-mm-ss-SSS"
@@ -181,11 +181,31 @@ final class Renderer {
                 return false
         }
         
-        //保存png格式的彩色图片，要花费30ms
+
+        // 保存相机参数到txt文件中，花费1ms
+        let camera = frame.camera
+        let projectionMatrix = camera.projectionMatrix(for: orientation, viewportSize: viewportSize, zNear: 0.001, zFar: 0)
+        
+        if saveCamerEnable {
+            let cameraMatrix:String = """
+                                eulerAngles\n\(camera.eulerAngles)\n
+                                cameraIntrinsics\n\(camera.intrinsics)\n
+                                viewMatrix\n\(camera.viewMatrix(for: orientation))\n
+                                projectionMatrix\n\(projectionMatrix)\n
+                                """
+            let path = fileDir+time+"_camera.txt"
+            do{
+                try cameraMatrix.write(to: URL(fileURLWithPath:path), atomically: false, encoding: .utf8)
+            }catch{
+                print("Error: save txt false!!! It's \(path)")
+            }
+        }
+        
+        //保存jpeg格式的彩色图片，要花费30ms
         let pixelBuffer = frame.capturedImage
         if saveRGBEnable {
-            let rgbPath = fileDir+time+"_rgb.png"
-            save2png(pixelBuffer: pixelBuffer, path: rgbPath)
+            let rgbPath = fileDir+time+"_rgb.jpeg"
+            save2jpeg(pixelBuffer: pixelBuffer, path: rgbPath)
         }
         
         //保存txt格式的深度图，要花费35ms
@@ -194,16 +214,16 @@ final class Renderer {
             save2txt(pixelBuffer: depthMap, path: depPathTxt)
         }
         
-        //保存png格式的深度图，要花费10ms
-        if saveDepthPNGEnable {
-            let depPath = fileDir+time+"_depth.png"
-            save2png(pixelBuffer: depthMap, path: depPath)
+        //保存jpeg格式的深度图，要花费10ms
+        if saveDepthJPEGEnable {
+            let depPath = fileDir+time+"_depth.jpeg"
+            save2jpeg(pixelBuffer: depthMap, path: depPath)
         }
         
-        //保存png格式的置信图，要花费10ms
+        //保存jpeg格式的置信图，要花费10ms
         if saveConfEnable {
-            let conPath = fileDir+time+"_conf.png"
-            save2png(pixelBuffer: confidenceMap, path: conPath)
+            let conPath = fileDir+time+"_conf.jpeg"
+            save2jpeg(pixelBuffer: confidenceMap, path: conPath)
         }
         
         depthTexture = makeTexture(fromPixelBuffer: depthMap, pixelFormat: .r32Float, planeIndex: 0)
@@ -221,34 +241,17 @@ final class Renderer {
         let viewMatrixInversed = viewMatrix.inverse
         let projectionMatrix = camera.projectionMatrix(for: orientation, viewportSize: viewportSize, zNear: 0.001, zFar: 0) // 投影矩阵：三维世界坐标系->视点的二位平面???
         
-        // 保存到txt文件中
-        if saveCamerEnable {
-            let cameraMatrix:String = """
-                                eulerAngles\n\(camera.eulerAngles)\n
-                                cameraIntrinsics\n\(camera.intrinsics)\n
-                                cameraIntrinsicsInversed\n\(cameraIntrinsicsInversed)\n
-                                viewMatrix\n\(viewMatrix)\n
-                                viewMatrixInversed\n\(viewMatrixInversed)\n
-                                projectionMatrix\n\(projectionMatrix)\n
-                                """
-            let path = fileDir+time+"_camera.txt"
-            do{
-                try cameraMatrix.write(to: URL(fileURLWithPath:path), atomically: false, encoding: .utf8)
-            }catch{
-                print("Error: save txt false!!! It's \(path)")
-            }
-        }
         
         pointCloudUniforms.viewProjectionMatrix = projectionMatrix * viewMatrix
         pointCloudUniforms.localToWorld = viewMatrixInversed * rotateToARCamera
         pointCloudUniforms.cameraIntrinsicsInversed = cameraIntrinsicsInversed
     }
     
-    func draw(camera:Bool, RGB:Bool, Conf:Bool, DepthPNG:Bool, DepthTXT:Bool) {
+    func draw(camera:Bool, RGB:Bool, Conf:Bool, DepthJPEG:Bool, DepthTXT:Bool) {
 //        saveCamerEnable = camera
 //        saveRGBEnable = RGB
 //        saveConfEnable = Conf
-//        saveDepthPNGEnable = DepthPNG
+//        saveDepthJPEGEnable = DepthJPEG
 //        saveDepthTXTEnable = DepthTXT
         
         guard let currentFrame = session.currentFrame,
@@ -373,9 +376,9 @@ final class Renderer {
     }
     
     /**
-     将数据保存为png格式
+     将数据保存为jpeg格式
      */
-    private func save2png(pixelBuffer: CVPixelBuffer, path : String){
+    private func save2jpeg(pixelBuffer: CVPixelBuffer, path : String){
         guard let jpegData = jpegData(withPixelBuffer: pixelBuffer, attachments: nil) else {
             print("Error: Unable to create JPEG photo")
             return

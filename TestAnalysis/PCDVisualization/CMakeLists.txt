@@ -1,0 +1,11 @@
+cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
+set(CMAKE_BUILD_TYPE "Release")
+set(CMAKE_CXX_STANDARD 17)
+
+project(PCDVisualization)
+find_package(PCL 1.11 REQUIRED)
+include_directories(${PCL_INCLUDE_DIRS})
+link_directories(${PCL_LIBRARY_DIRS})
+add_definitions(${PCL_DEFINITIONS})
+add_executable(PCDVisualization visualization.cpp)
+target_link_libraries(PCDVisualization ${PCL_LIBRARIES})

@@ -8,3 +8,5 @@ xcuserdata/
 # CLion
 *build*
 .idea
+filename.txt
+temp.txt
